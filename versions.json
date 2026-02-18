@@ -12,7 +12,7 @@
   "ruby": "ab6dca77a8184abc94af6e3e82538741b5078d63",
   "php": "015ce839db5ae9ceda763bf12e071867fbe8cc89",
   "swift": "db675450dcc1478ee128c96ecc61c13272431aab",
-  "kotlin": "48c964a9ddfe4387968d1b6412d7b39106fb7f39",
+  "kotlin": "c915271d261e8c0a590a0c05ad921c8cb73393c8",
   "bash": "a06c2e4415e9bc0346c6b86d401879ffb44058f7",
   "dockerfile": "971acdd908568b4531b0ba28a445bf0bb720aba5",
   "hcl": "64ad62785d442eb4d45df3a1764962dafd5bc98b",
@@ -35,5 +35,13 @@
   "regex": "b2ac15e27fce703d2f37a79ccd94a5c0cbe9720b",
   "glsl": "24a6c8ef698e4480fecf8340d771fbcb5de8fbb4",
   "hlsl": "bab9111922d53d43668fabb61869bec51bbcb915",
-  "tcl": "8f11ac7206a54ed11210491cee1e0657e2962c47"
+  "tcl": "8f11ac7206a54ed11210491cee1e0657e2962c47",
+  "make": "a4b9187417d6be349ee5fd4b6e77b4172c6827dd",
+  "cmake": "c7b2a71e7f8ecb167fad4c97227c838439280175",
+  "proto": "42d82fa18f8afe59b5fc0b16c207ee4f84cb185f",
+  "heex": "b5a7cb5f74dc695a9ff5f04919f872ebc7a895e9",
+  "graphql": "5e66e961eee421786bdda8495ed1db045e06b5fe",
+  "r": "0e6ef7741712c09dc3ee6e81c42e919820cc65ef",
+  "clojure": "e43eff80d17cf34852dcd92ca5e6986d23a7040f",
+  "erlang": "f21023bbd6cd30cadbc793d80ae4d990d9be86fc"
 }
