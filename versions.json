@@ -44,5 +44,20 @@
   "r": "0e6ef7741712c09dc3ee6e81c42e919820cc65ef",
   "clojure": "e43eff80d17cf34852dcd92ca5e6986d23a7040f",
   "erlang": "f21023bbd6cd30cadbc793d80ae4d990d9be86fc",
-  "astro": "213f6e6973d9b456c6e50e86f19f66877e7ef0ee"
+  "astro": "213f6e6973d9b456c6e50e86f19f66877e7ef0ee",
+  "nginx": "47ade644d754cce57974aac44d2c9450e823d4f4",
+  "powershell": "7212f47716ced384ac012b2cc428fd9f52f7c5d4",
+  "jq": "1e139eba1fd3a9c34a36f0f0f47ed8b73c9b4636",
+  "eex": "f742f2fe327463335e8671a87c0b9b396905d1d1",
+  "perl": "ad74e6db234c35d537de9358799a8e0cc4f5dee0",
+  "ocaml": "3ef7c00b29e41e3a0c1d18e82ea37c64d72b93fc",
+  "interface": "3ef7c00b29e41e3a0c1d18e82ea37c64d72b93fc",
+  "zig": "a80a6e9be81b33b182ce6305ae4ea28e29211bd5",
+  "nim": "9b4ede21a6ca866d29263f6b66c070961bc622b4",
+  "cobol": "e99dbdc3d800d5fa2796476efd60af91f6b43d93",
+  "elm": "6d9511c28181db66daee4e883f811f6251220943",
+  "tree-sitter-markdown": "cee71b8288f2ec09c29415219ac15a654bd571b9",
+  "tree-sitter-markdown-inline": "cee71b8288f2ec09c29415219ac15a654bd571b9",
+  "latex": "7e0ecdc02926c7b9b2e0c76003d4fe7b0944f957",
+  "solidity": "048fe686cb1fde267243739b8bdbec8fc3a55272"
 }
