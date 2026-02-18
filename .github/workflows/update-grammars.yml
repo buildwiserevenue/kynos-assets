@@ -1,37 +1,11 @@
-name: Build 100+ Grammars
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 0 1 * *'
-
-permissions:
-  contents: write
-
-jobs:
-  build-all-wasm:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node & Emscripten
-        uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      
-      - name: Install Tools
-        run: npm install -g tree-sitter-cli
-
-      - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with: { version: 3.1.64 }
-
-      - name: Build Loop
+- name: Build Loop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         run: |
           mkdir -p grammars
           # Legge dal file languages.txt saltando i commenti (#)
           grep -v '^#' languages.txt | while read repo; do
             echo "--------------------------------------------"
-            echo "🏗️ Building: $repo"
             
             # Gestione sottocartelle (es. typescript:tsx)
             if [[ "$repo" == *":"* ]]; then
@@ -41,29 +15,34 @@ jobs:
             else
               base_repo="$repo"
               subdir=""
-              lang_name=$(basename "$repo" | sed 's/tree-sitter-//')
+              # Estrae il nome pulito (es. tree-sitter-python -> python)
+              lang_name=$(basename "$base_repo" | sed 's/tree-sitter-//')
             fi
 
-            # Clone e Build con protezione errore (|| true)
-            git clone --depth 1 "https://github.com/$base_repo.git" temp_repo || continue
+            echo "🏗️ Building: $lang_name from $base_repo"
+
+            git clone --depth 1 "https://x-access-token:${GITHUB_TOKEN}@github.com/${base_repo}.git" temp_repo || { echo "❌ Clone failed for $base_repo"; continue; }
             
             cd temp_repo
             [[ -n "$subdir" ]] && cd "$subdir"
             
-            # Tenta la compilazione
-            if tree-sitter build-wasm; then
-              mv *.wasm "../grammars/$lang_name.wasm"
-              echo "✅ Success: $lang_name"
+            # --- NUOVO COMANDO 2026 ---
+            # tree-sitter build --wasm è il comando corretto per le versioni recenti
+            if tree-sitter build --wasm; then
+              # Il file generato di solito si chiama tree-sitter-[lang].wasm o [lang].wasm
+              generated_wasm=$(find . -maxdepth 1 -name "*.wasm" | head -n 1)
+              if [[ -n "$generated_wasm" ]]; then
+                mv "$generated_wasm" "$GITHUB_WORKSPACE/grammars/$lang_name.wasm"
+                echo "✅ Success: $lang_name"
+              else
+                echo "❌ .wasm file not found after build for $lang_name"
+              fi
             else
-              echo "❌ Failed: $lang_name (skipping)"
+              echo "❌ Build failed for $lang_name"
             fi
             
             cd "$GITHUB_WORKSPACE"
             rm -rf temp_repo
+            
+            sleep 1
           done
-
-      - name: Commit Results
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "🤖 Update 100+ WASM grammars"
-          file_pattern: 'grammars/*.wasm'
