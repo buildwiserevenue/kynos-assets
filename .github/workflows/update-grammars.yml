@@ -1,0 +1,69 @@
+name: Build 100+ Grammars
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
+
+permissions:
+  contents: write
+
+jobs:
+  build-all-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node & Emscripten
+        uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      
+      - name: Install Tools
+        run: npm install -g tree-sitter-cli
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with: { version: 3.1.64 }
+
+      - name: Build Loop
+        run: |
+          mkdir -p grammars
+          # Legge dal file languages.txt saltando i commenti (#)
+          grep -v '^#' languages.txt | while read repo; do
+            echo "--------------------------------------------"
+            echo "🏗️ Building: $repo"
+            
+            # Gestione sottocartelle (es. typescript:tsx)
+            if [[ "$repo" == *":"* ]]; then
+              base_repo="${repo%%:*}"
+              subdir="${repo##*:}"
+              lang_name="$subdir"
+            else
+              base_repo="$repo"
+              subdir=""
+              lang_name=$(basename "$repo" | sed 's/tree-sitter-//')
+            fi
+
+            # Clone e Build con protezione errore (|| true)
+            git clone --depth 1 "https://github.com/$base_repo.git" temp_repo || continue
+            
+            cd temp_repo
+            [[ -n "$subdir" ]] && cd "$subdir"
+            
+            # Tenta la compilazione
+            if tree-sitter build-wasm; then
+              mv *.wasm "../grammars/$lang_name.wasm"
+              echo "✅ Success: $lang_name"
+            else
+              echo "❌ Failed: $lang_name (skipping)"
+            fi
+            
+            cd "$GITHUB_WORKSPACE"
+            rm -rf temp_repo
+          done
+
+      - name: Commit Results
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 Update 100+ WASM grammars"
+          file_pattern: 'grammars/*.wasm'
