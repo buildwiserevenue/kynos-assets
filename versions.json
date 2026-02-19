@@ -86,5 +86,10 @@
   "forth": "360ef13f8c609ec6d2e80782af69958b84e36cd0",
   "systemverilog": "7c4b01b7df2f6e7fa1f698c9d30ac8f93af18ed2",
   "abap": "c7604df9e25d56ae879fa25694fd9f2ddbab05d8",
-  "supercollider": "76b3cab1773f08bb7d3a185420b0a44c6da8c294"
+  "supercollider": "76b3cab1773f08bb7d3a185420b0a44c6da8c294",
+  "tree-sitter-asciidoc": "276ae6b766830e9d9de9106713d94a6913279bc2",
+  "cfscript": "6bb7e74437769b05f56b5a05f80efd8f31034e56",
+  "vhdl": "674ed9fe6c13c79c0e7407daaf4518d053e6f0f4",
+  "ada": "6b58259a08b1a22ba0247a7ce30be384db618da6",
+  "matlab": "574dde565caddf8cf44eec7df3cb89eb96053ed7"
 }
