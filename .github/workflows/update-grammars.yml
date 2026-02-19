@@ -44,7 +44,7 @@ jobs:
           SUCCESS=0
           FAILED=0
           
-          grep -v '^#' languages.txt | while read -r repo_entry; do
+          while read -r repo_entry; do
             [ -z "$repo_entry" ] && continue
             
             if [[ "$repo_entry" == *":"* ]]; then
@@ -101,13 +101,13 @@ jobs:
             cd "$GITHUB_WORKSPACE"
             rm -rf temp_repo
             sleep 2
-          done
+          done < <(grep -v '^#' languages.txt)
           
           echo "SUCCESS=$SUCCESS" >> $GITHUB_ENV
           echo "FAILED=$FAILED" >> $GITHUB_ENV
           
       - name: Commit Results
-        if: env.SUCCESS > 0
+        if: success()
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "🤖 Build: ${{ env.SUCCESS }} OK, ${{ env.FAILED }} KO"
