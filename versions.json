@@ -80,5 +80,9 @@
   "racket": "56b57807f86aa4ddb14892572b318edd4bc90ebe",
   "awk": "34bbdc7cce8e803096f47b625979e34c1be38127",
   "stata": "cdc855671fd580a83d9b57e5adc5ccef862a9dc4",
-  "autohotkey": "fb09d84cab55cff426276e481f9352cfb4fa7d59"
+  "autohotkey": "fb09d84cab55cff426276e481f9352cfb4fa7d59",
+  "gdscript": "89e66b6bdc002ab976283f277cbb48b780c5d0e9",
+  "pascal": "042119eca2e18a60e56317fb06ee3ba5c32cb447",
+  "forth": "360ef13f8c609ec6d2e80782af69958b84e36cd0",
+  "systemverilog": "7c4b01b7df2f6e7fa1f698c9d30ac8f93af18ed2"
 }
