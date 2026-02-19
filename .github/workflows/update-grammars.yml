@@ -1,109 +1,81 @@
-name: Resilient Build 100+ Grammars
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'
-
-permissions:
-  contents: write
-
-jobs:
-  build-all-wasm:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node & Emscripten
-        uses: actions/setup-node@v4
-        with: { node-version: '20' }
+- name: Build Loop
+  env:
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  run: |
+    [ ! -f languages.txt ] && { echo "❌ languages.txt non trovato"; exit 1; }
+    
+    mkdir -p grammars
+    [ -f versions.json ] || echo "{}" > versions.json
+    sed -i 's/\r$//' languages.txt
+    
+    SUCCESS=0
+    FAILED=0
+    
+    grep -v '^#' languages.txt | while read -r repo_entry; do
+      [ -z "$repo_entry" ] && continue
       
-      - name: Install Tree-sitter CLI
-        run: npm install -g tree-sitter-cli
+      if [[ "$repo_entry" == *":"* ]]; then
+        base_repo="${repo_entry%%:*}"
+        subdir="${repo_entry##*:}"
+        lang_name=$(basename "$subdir")
+      else
+        base_repo="$repo_entry"
+        subdir=""
+        lang_name=$(basename "$base_repo" | sed 's/tree-sitter-//')
+      fi
+      
+      echo "🔍 $lang_name ($base_repo)..."
+      REMOTE_SHA=$(gh api repos/$base_repo/commits/HEAD --template '{{.sha}}' 2>/dev/null || echo "ERROR")
+      
+      if [ "$REMOTE_SHA" == "ERROR" ]; then
+        echo "⚠️ Repo non accessibile: $base_repo"
+        ((FAILED++))
+        continue
+      fi
+      
+      LOCAL_SHA=$(jq -r ".\"$lang_name\"" versions.json)
+      if [ "$REMOTE_SHA" == "$LOCAL_SHA" ] && [ -f "grammars/$lang_name.wasm" ]; then
+        echo "⏭️ Già aggiornato"
+        continue
+      fi
+      
+      echo "🏗️ Building..."
+      rm -rf temp_repo
+      if ! timeout 60 git clone --depth 1 "https://github.com/$base_repo.git" temp_repo 2>/dev/null; then
+        echo "❌ Clone fallito"
+        ((FAILED++))
+        continue
+      fi
+      
+      cd temp_repo
+      [ -n "$subdir" ] && cd "$subdir"
+      
+      tree-sitter generate 2>/dev/null || true
+      if timeout 180 tree-sitter build --wasm; then
+        generated_wasm=$(find . -name "*.wasm" -maxdepth 1 | head -n 1)
+        if [ -n "$generated_wasm" ]; then
+          mv "$generated_wasm" "$GITHUB_WORKSPACE/grammars/$lang_name.wasm"
+          cd "$GITHUB_WORKSPACE"
+          jq ".\"$lang_name\" = \"$REMOTE_SHA\"" versions.json > tmp.json && mv tmp.json versions.json
+          echo "✅ $lang_name"
+          ((SUCCESS++))
+        fi
+      else
+        echo "❌ Build fallito"
+        ((FAILED++))
+      fi
+      
+      cd "$GITHUB_WORKSPACE"
+      rm -rf temp_repo
+      sleep 2
+    done
+    
+    echo "SUCCESS=$SUCCESS" >> $GITHUB_ENV
+    echo "FAILED=$FAILED" >> $GITHUB_ENV
 
-      - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with: { version: 3.1.64 }
-
-      # --- 1. CACHE  ---
-      - name: Cache Tree-sitter WASI SDK
-        uses: actions/cache@v4
-        with:
-          path: /home/runner/.cache/tree-sitter
-          key: tree-sitter-wasi-v29
-
-      # --- 2. BUILD LOOP ---
-      - name: Build Loop
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p grammars
-          [ -f versions.json ] || echo "{}" > versions.json
-          sed -i 's/\r//' languages.txt
-
-          grep -v '^#' languages.txt | while read -r repo_entry; do
-            [ -z "$repo_entry" ] && continue
-            
-            if [[ "$repo_entry" == *":"* ]]; then
-              base_repo="${repo_entry%%:*}"
-              subdir="${repo_entry##*:}"
-              lang_name=$(basename "$subdir")
-            else
-              base_repo="$repo_entry"
-              subdir=""
-              lang_name=$(basename "$base_repo" | sed 's/tree-sitter-//')
-            fi
-
-            echo "--------------------------------------------"
-            echo "🔍 Checking $lang_name ($base_repo)..."
-
-            REMOTE_SHA=$(gh api repos/$base_repo/commits/HEAD --template '{{.sha}}' 2>/dev/null || echo "ERROR")
-            
-            if [ "$REMOTE_SHA" == "ERROR" ]; then
-              echo "⚠️ Repo non trovato o errore API per $base_repo. Salto."
-              continue
-            fi
-
-            LOCAL_SHA=$(jq -r ".\"$lang_name\"" versions.json)
-
-            if [ "$REMOTE_SHA" == "$LOCAL_SHA" ] && [ -f "grammars/$lang_name.wasm" ]; then
-              echo "⏭️ $lang_name già aggiornato."
-              continue
-            fi
-
-            echo "🏗️ Building $lang_name..."
-            rm -rf temp_repo
-            if ! git clone --depth 1 --retry 3 "https://github.com/$base_repo.git" temp_repo --depth 1 2>/dev/null; then
-              echo "❌ Clone failed per $base_repo"
-              continue
-            fi
-            
-            cd temp_repo
-            [ -n "$subdir" ] && cd "$subdir"
-            
-            tree-sitter generate 2>/dev/null || echo "Info: generate non necessario."
-
-            if tree-sitter build --wasm; then
-              generated_wasm=$(find . -maxdepth 1 -name "*.wasm" | head -n 1)
-              if [ -n "$generated_wasm" ]; then
-                mv "$generated_wasm" "$GITHUB_WORKSPACE/grammars/$lang_name.wasm"
-                cd "$GITHUB_WORKSPACE"
-                jq ".\"$lang_name\" = \"$REMOTE_SHA\"" versions.json > tmp.json && mv tmp.json versions.json
-                echo "✅ Success: $lang_name"
-              fi
-            else
-              echo "❌ Build failed per $lang_name"
-            fi
-            
-            cd "$GITHUB_WORKSPACE"
-            rm -rf temp_repo
-            sleep 6
-          done
-
-      # --- 4. COMMIT RISULTATI ---
-      - name: Commit Results
-        if: always() 
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "🤖 Smart Update: Progressi build WASM"
-          file_pattern: 'grammars/*.wasm versions.json'
+- name: Commit Results
+  if: env.SUCCESS > 0
+  uses: stefanzweifel/git-auto-commit-action@v5
+  with:
+    commit_message: "🤖 Build WASM: ${{ env.SUCCESS }} aggiornate, ${{ env.FAILED }} fallite"
+    file_pattern: 'grammars/*.wasm versions.json'
