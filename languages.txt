@@ -50,7 +50,7 @@ alaviss/tree-sitter-nim
 nedpals/tree-sitter-v
 JoranHonig/tree-sitter-solidity
 tree-sitter/tree-sitter-julia
-yutaro-sakamoto/tree-sitter-cobol
+#yutaro-sakamoto/tree-sitter-cobol
 stadelmanma/tree-sitter-fortran
 elm-tooling/tree-sitter-elm
 postsolar/tree-sitter-purescript
