@@ -113,6 +113,16 @@ jobs:
             sleep 2
           done
           
+          echo "### 📊 Riepilogo Build" >> $GITHUB_STEP_SUMMARY
+          echo "| Linguaggi OK | Falliti |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| $(cat /tmp/success_count) | $(cat /tmp/failed_count) |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 📦 Dimensioni File WASM" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          du -sh grammars/*.wasm | sort -h >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
           echo "SUCCESS=$(cat /tmp/success_count)" >> $GITHUB_ENV
           echo "FAILED=$(cat /tmp/failed_count)" >> $GITHUB_ENV
 
