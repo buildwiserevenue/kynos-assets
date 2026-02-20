@@ -71,10 +71,10 @@ jobs:
             
             LOCAL_SHA=$(jq -r ".\"$lang_name\"" versions.json)
             
-            if [ "$LOCAL_SHA" != "null" ] && [ "$REMOTE_SHA" == "$LOCAL_SHA" ] && [ -f "grammars/$lang_name.wasm" ]; then
-              echo "⏭️ Già aggiornato"
-              continue
-            fi
+            if [ "$LOCAL_SHA" != "null" ] && [ "$REMOTE_SHA" == "$LOCAL_SHA" ] && [ -f "grammars/$lang_name.wasm" ] && [ -f "grammars/$lang_name.wasm.gz" ]; then
+            echo "⏭️ Già aggiornato (WASM + GZ presenti)"
+            continue
+          fi
             
             echo "🏗️ Building..."
             rm -rf temp_repo
