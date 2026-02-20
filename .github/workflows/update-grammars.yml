@@ -105,6 +105,10 @@ jobs:
                 fi
                 
                 mv "$generated_wasm" "$GITHUB_WORKSPACE/grammars/$lang_name.wasm"
+                
+                gzip -k -9 "$GITHUB_WORKSPACE/grammars/$lang_name.wasm"
+                # ---------------------
+                
                 cd "$GITHUB_WORKSPACE"
                 jq ".\"$lang_name\" = \"$REMOTE_SHA\"" versions.json > tmp.json && mv tmp.json versions.json
                 echo "✅ $lang_name"
@@ -132,7 +136,7 @@ jobs:
           
           echo -e "\n### 📦 Dimensioni File WASM" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          du -sh grammars/*.wasm | sort -h >> $GITHUB_STEP_SUMMARY
+          du -sh grammars/* | sort -h >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
           echo "SUCCESS=$(cat /tmp/success_count)" >> $GITHUB_ENV
@@ -143,4 +147,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "🤖 Build: ${{ env.SUCCESS }} OK, ${{ env.FAILED }} KO"
-          file_pattern: 'grammars/*.wasm versions.json'
+          file_pattern: 'grammars/*.wasm grammars/*.gz versions.json'
