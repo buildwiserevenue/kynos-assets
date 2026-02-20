@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+          
       - name: Install Tree-sitter CLI
         run: npm install -g tree-sitter-cli
         
@@ -36,8 +36,6 @@ jobs:
       - name: Build Loop
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Ottimizzazione per dimensione e flessibilità della memoria
-          EMCC_CFLAGS: "-Oz -s ALLOW_MEMORY_GROWTH=1"
         run: |
           [ ! -f languages.txt ] && { echo "❌ languages.txt mancante"; exit 1; }
           
@@ -51,6 +49,7 @@ jobs:
           grep -v '^#' languages.txt | while read -r repo_entry; do
             [ -z "$repo_entry" ] && continue
             
+            # Logica parsing nomi repo
             if [[ "$repo_entry" == *":"* ]]; then
               base_repo="${repo_entry%%:*}"
               subdir="${repo_entry##*:}"
@@ -90,12 +89,14 @@ jobs:
             # Genera i file C se non presenti
             tree-sitter generate 2>/dev/null || true
             
-            # ⏳ Build con timeout esteso per compensare l'ottimizzazione -Oz
+            # Build con -O2 (miglior compromesso velocità/stabilità)
+            export EMCC_CFLAGS="-O2 -s ALLOW_MEMORY_GROWTH=1"
+            
             if timeout 300 tree-sitter build --wasm 2>/dev/null; then
               generated_wasm=$(find . -name "*.wasm" -maxdepth 1 | head -n 1)
+              
               if [ -n "$generated_wasm" ]; then
-
-              echo "🗜️ Ottimizzando $generated_wasm..."
+                echo "🗜️ Ottimizzando $generated_wasm..."
                 wasm-opt -Oz "$generated_wasm" -o "$generated_wasm.opt" 2>/dev/null || true
                 
                 if [ -f "$generated_wasm.opt" ]; then
@@ -112,7 +113,7 @@ jobs:
                 echo $(($(cat /tmp/failed_count) + 1)) > /tmp/failed_count
               fi
             else
-              echo "❌ Build fallito"
+              echo "❌ Build fallita o timeout"
               echo $(($(cat /tmp/failed_count) + 1)) > /tmp/failed_count
             fi
             
@@ -121,16 +122,18 @@ jobs:
             sleep 2
           done
           
+          # Report finale
           echo "### 📊 Riepilogo Build" >> $GITHUB_STEP_SUMMARY
-          echo "| Linguaggi OK | Falliti |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| $(cat /tmp/success_count) | $(cat /tmp/failed_count) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Stato | Conteggio |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Successi | $(cat /tmp/success_count) |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Falliti | $(cat /tmp/failed_count) |" >> $GITHUB_STEP_SUMMARY
           
-          echo "### 📦 Dimensioni File WASM" >> $GITHUB_STEP_SUMMARY
+          echo -e "\n### 📦 Dimensioni File WASM" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
           du -sh grammars/*.wasm | sort -h >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          
+
           echo "SUCCESS=$(cat /tmp/success_count)" >> $GITHUB_ENV
           echo "FAILED=$(cat /tmp/failed_count)" >> $GITHUB_ENV
 
