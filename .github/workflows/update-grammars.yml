@@ -94,6 +94,14 @@ jobs:
             if timeout 300 tree-sitter build --wasm 2>/dev/null; then
               generated_wasm=$(find . -name "*.wasm" -maxdepth 1 | head -n 1)
               if [ -n "$generated_wasm" ]; then
+
+              echo "🗜️ Ottimizzando $generated_wasm..."
+                wasm-opt -Oz "$generated_wasm" -o "$generated_wasm.opt" 2>/dev/null || true
+                
+                if [ -f "$generated_wasm.opt" ]; then
+                  mv "$generated_wasm.opt" "$generated_wasm"
+                fi
+                
                 mv "$generated_wasm" "$GITHUB_WORKSPACE/grammars/$lang_name.wasm"
                 cd "$GITHUB_WORKSPACE"
                 jq ".\"$lang_name\" = \"$REMOTE_SHA\"" versions.json > tmp.json && mv tmp.json versions.json
