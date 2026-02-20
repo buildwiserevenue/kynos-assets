@@ -99,6 +99,8 @@ ionide/tree-sitter-fsharp:fsharp
 justinmk/tree-sitter-ini
 dbt-labs/tree-sitter-jinja2
 uben0/tree-sitter-typst
-tree-sitter-grammars/tree-sitter-csv
+tree-sitter-grammars/tree-sitter-csv:csv
+tree-sitter-grammars/tree-sitter-csv:tsv
+tree-sitter-grammars/tree-sitter-csv:psv
 tree-sitter-grammars/tree-sitter-bicep
 Rukiza/tree-sitter-prolog
