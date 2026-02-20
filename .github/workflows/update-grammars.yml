@@ -106,7 +106,7 @@ jobs:
                 
                 mv "$generated_wasm" "$GITHUB_WORKSPACE/grammars/$lang_name.wasm"
                 
-                gzip -k -9 "$GITHUB_WORKSPACE/grammars/$lang_name.wasm"
+                gzip -k -f -9 "$GITHUB_WORKSPACE/grammars/$lang_name.wasm"
                 # ---------------------
                 
                 cd "$GITHUB_WORKSPACE"
