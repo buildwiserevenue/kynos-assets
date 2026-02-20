@@ -70,7 +70,8 @@ jobs:
             fi
             
             LOCAL_SHA=$(jq -r ".\"$lang_name\"" versions.json)
-            if [ "$REMOTE_SHA" == "$LOCAL_SHA" ] && [ -f "grammars/$lang_name.wasm" ]; then
+            
+            if [ "$LOCAL_SHA" != "null" ] && [ "$REMOTE_SHA" == "$LOCAL_SHA" ] && [ -f "grammars/$lang_name.wasm" ]; then
               echo "⏭️ Già aggiornato"
               continue
             fi
